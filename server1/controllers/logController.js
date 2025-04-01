@@ -2,6 +2,7 @@ const db = require('../config/database');
 
 const getLogStats = async (req, res) => {
     try {
+        console.log('Fetching log stats...');
         const { rows: results } = await db.query(`
             SELECT 
                 status_code,
@@ -12,48 +13,34 @@ const getLogStats = async (req, res) => {
             ORDER BY date DESC, status_code
         `);
         
-        const stats = {
-            successCount: results.filter(r => r.status_code >= 200 && r.status_code < 300).length,
-            errorCount: results.filter(r => r.status_code >= 400).length,
-            byDate: {},
-            byStatusCode: {}
-        };
-
-        results.forEach(row => {
-            if (!stats.byDate[row.date]) {
-                stats.byDate[row.date] = {};
-            }
-            stats.byDate[row.date][row.status_code] = row.count;
-
-            if (!stats.byStatusCode[row.status_code]) {
-                stats.byStatusCode[row.status_code] = 0;
-            }
-            stats.byStatusCode[row.status_code] += row.count;
-        });
-
-        res.json(stats);
+        console.log('Log stats results:', results);
+        res.json(results);
     } catch (error) {
-        console.error('Error al obtener estadísticas:', error);
-        res.status(500).json({ message: 'Error al obtener estadísticas de logs' });
+        console.error('Error fetching log stats:', error);
+        res.status(500).json({ 
+            error: 'Error al obtener estadísticas',
+            details: error.message 
+        });
     }
 };
 
 const getAllLogs = async (req, res) => {
     try {
-        const { rows: logs } = await db.query(`
-            SELECT 
-                l.*,
-                u.username
-            FROM logs l
-            LEFT JOIN users u ON l.user_id = u.id
-            ORDER BY l.timestamp DESC
-            LIMIT 1000
+        console.log('Fetching all logs...');
+        const { rows } = await db.query(`
+            SELECT * FROM logs 
+            ORDER BY timestamp DESC 
+            LIMIT 100
         `);
         
-        res.json(logs);
+        console.log('Number of logs retrieved:', rows.length);
+        res.json(rows);
     } catch (error) {
-        console.error('Error al obtener logs:', error);
-        res.status(500).json({ message: 'Error al obtener logs' });
+        console.error('Error fetching all logs:', error);
+        res.status(500).json({ 
+            error: 'Error al obtener logs',
+            details: error.message 
+        });
     }
 };
 
