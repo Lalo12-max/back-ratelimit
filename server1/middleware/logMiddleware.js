@@ -1,0 +1,89 @@
+const db = require('../config/database');
+const jwt = require('jsonwebtoken');
+
+const getClientIp = (req) => {
+    
+    let ip = req.headers['x-forwarded-for'] || 
+            req.headers['x-real-ip'] ||
+            req.socket?.remoteAddress ||
+            '127.0.0.1';
+
+   
+    if (ip === '::1' || ip === ':1' || ip === '::ffff:127.0.0.1') {
+        ip = '127.0.0.1';
+    }
+
+    
+    if (ip.includes('::ffff:')) {
+        ip = ip.split('::ffff:')[1];
+    }
+
+    return ip;
+};
+
+const logMiddleware = async (req, res, next) => {
+    const start = Date.now();
+
+    // Extraer el token del header
+    const authHeader = req.headers['authorization'];
+    let userId = null;
+
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            userId = decoded.id || decoded.userId;
+        } catch (error) {
+            console.log('Error al decodificar token:', error.message);
+        }
+    }
+
+    // Capturar la respuesta
+    const oldSend = res.send;
+    res.send = async function (data) {
+        const result = oldSend.call(this, data);
+        
+        const responseTime = Date.now() - start;
+        
+        const logData = {
+            user_id: userId || req.user?.id || null,
+            method: req.method,
+            path: req.originalUrl,
+            status_code: res.statusCode,
+            response_time: `${responseTime}ms`,
+            ip_address: getClientIp(req),  // Using the new function
+            user_agent: req.headers['user-agent'],
+            request_body: JSON.stringify(req.body),
+            query_params: JSON.stringify(req.query),
+            hostname: req.hostname,
+            protocol: req.protocol,
+            environment: process.env.NODE_ENV || 'development',
+            node_version: process.version,
+            process_id: process.pid
+        };
+
+        try {
+            await db.query(`
+                INSERT INTO logs (
+                    user_id, method, path, status_code, response_time,
+                    ip_address, user_agent, request_body, query_params,
+                    hostname, protocol, environment, node_version, process_id
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            `, [
+                logData.user_id, logData.method, logData.path, logData.status_code,
+                logData.response_time, logData.ip_address, logData.user_agent,
+                logData.request_body, logData.query_params, logData.hostname,
+                logData.protocol, logData.environment, logData.node_version,
+                logData.process_id
+            ]);
+        } catch (error) {
+            console.error('Error al guardar log:', error);
+        }
+        
+        return result;
+    };
+
+    next();
+};
+
+module.exports = logMiddleware;
