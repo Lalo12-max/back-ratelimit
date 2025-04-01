@@ -58,22 +58,31 @@ const logMiddleware = async (req, res, next) => {
             response_time: `${responseTime}`.substring(0, 45),
             ip_address: getClientIp(req).substring(0, 45),
             user_agent: (req.headers['user-agent'] || '').substring(0, 45),
-            request_body: JSON.stringify(req.body).substring(0, 45)
+            request_body: JSON.stringify(req.body).substring(0, 45),
+            // Agregamos los campos faltantes
+            query_params: JSON.stringify(req.query).substring(0, 255),
+            hostname: req.hostname?.substring(0, 255) || null,
+            protocol: req.protocol?.substring(0, 10) || null,
+            environment: process.env.NODE_ENV?.substring(0, 20) || 'development',
+            node_version: process.version.substring(0, 20),
+            process_id: process.pid
         };
-        console.log('Datos del log preparados:', logData);
 
         try {
             console.log('Intentando insertar log en la base de datos...');
             const result = await db.query(`
                 INSERT INTO logs (
                     user_id, method, path, status_code, response_time,
-                    ip_address, user_agent, request_body
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                    ip_address, user_agent, request_body, query_params,
+                    hostname, protocol, environment, node_version, process_id
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
                 RETURNING *
             `, [
                 logData.user_id, logData.method, logData.path, logData.status_code,
                 logData.response_time, logData.ip_address, logData.user_agent,
-                logData.request_body
+                logData.request_body, logData.query_params, logData.hostname,
+                logData.protocol, logData.environment, logData.node_version,
+                logData.process_id
             ]);
             console.log('Log guardado exitosamente:', result.rows[0]);
         } catch (error) {
