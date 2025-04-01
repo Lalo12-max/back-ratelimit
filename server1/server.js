@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -9,6 +11,15 @@ const logController = require('./controllers/logController');
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
+io.on('connection', (socket) => {
+  console.log('New client connected');
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
 
 app.use(express.json());
 app.use(cors({
@@ -25,13 +36,15 @@ const limiter = rateLimit({
 app.use(limiter);
 app.use(logMiddleware);
 
-app.post('/register', authController.register);
+app.post('/register', (req, res) => {
+  authController.register(req, res, io);
+});
 app.post('/login', authController.login);
 app.post('/verify-mfa', authController.verifyMFA);
 app.get('/logs/stats', logController.getLogStats);
 app.get('/logs/all', logController.getAllLogs);
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Servidor 1 corriendo en puerto ${PORT}`);
 });
