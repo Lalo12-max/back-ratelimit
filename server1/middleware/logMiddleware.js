@@ -47,19 +47,13 @@ const logMiddleware = async (req, res, next) => {
         
         const logData = {
             user_id: userId || req.user?.id || null,
-            method: req.method,
-            path: req.originalUrl,
+            method: req.method.substring(0, 45),
+            path: req.originalUrl.substring(0, 45),
             status_code: res.statusCode,
-            response_time: `${responseTime}ms`,
-            ip_address: getClientIp(req),  // Using the new function
-            user_agent: req.headers['user-agent'],
-            request_body: JSON.stringify(req.body),
-            query_params: JSON.stringify(req.query),
-            hostname: req.hostname,
-            protocol: req.protocol,
-            environment: process.env.NODE_ENV || 'development',
-            node_version: process.version,
-            process_id: process.pid
+            response_time: `${responseTime}`.substring(0, 45),
+            ip_address: getClientIp(req).substring(0, 45),
+            user_agent: (req.headers['user-agent'] || '').substring(0, 45),
+            request_body: JSON.stringify(req.body).substring(0, 45)
         };
 
         try {
