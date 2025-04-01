@@ -44,6 +44,11 @@ const logMiddleware = async (req, res, next) => {
         const result = oldSend.call(this, data);
         
         const responseTime = Date.now() - start;
+        console.log('Preparando datos para log:', {
+            method: req.method,
+            path: req.originalUrl,
+            statusCode: res.statusCode
+        });
         
         const logData = {
             user_id: userId || req.user?.id || null,
@@ -55,23 +60,28 @@ const logMiddleware = async (req, res, next) => {
             user_agent: (req.headers['user-agent'] || '').substring(0, 45),
             request_body: JSON.stringify(req.body).substring(0, 45)
         };
+        console.log('Datos del log preparados:', logData);
 
         try {
-            await db.query(`
+            console.log('Intentando insertar log en la base de datos...');
+            const result = await db.query(`
                 INSERT INTO logs (
                     user_id, method, path, status_code, response_time,
-                    ip_address, user_agent, request_body, query_params,
-                    hostname, protocol, environment, node_version, process_id
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                    ip_address, user_agent, request_body
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING *
             `, [
                 logData.user_id, logData.method, logData.path, logData.status_code,
                 logData.response_time, logData.ip_address, logData.user_agent,
-                logData.request_body, logData.query_params, logData.hostname,
-                logData.protocol, logData.environment, logData.node_version,
-                logData.process_id
+                logData.request_body
             ]);
+            console.log('Log guardado exitosamente:', result.rows[0]);
         } catch (error) {
-            console.error('Error al guardar log:', error);
+            console.error('Error detallado al guardar log:', {
+                error: error.message,
+                stack: error.stack,
+                logData
+            });
         }
         
         return result;
