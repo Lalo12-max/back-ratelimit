@@ -15,6 +15,26 @@ const getLogStats = async (req, res) => {
             ORDER BY date DESC, status_code
         `);
 
+        // Estadísticas por código de estado
+        const { rows: statusStats } = await db.query(`
+            SELECT 
+                status_code,
+                COUNT(*) as count
+            FROM rate_limit_logs
+            GROUP BY status_code
+            ORDER BY status_code
+        `);
+
+        // Estadísticas por método HTTP
+        const { rows: methodStats } = await db.query(`
+            SELECT 
+                method,
+                COUNT(*) as count
+            FROM rate_limit_logs
+            GROUP BY method
+            ORDER BY count DESC
+        `);
+
         // Distribución por ruta específica para rate limit
         const { rows: routeDistribution } = await db.query(`
             SELECT 
@@ -29,6 +49,8 @@ const getLogStats = async (req, res) => {
 
         res.json({
             general: results,
+            statusStats: statusStats,
+            methodStats: methodStats,
             routeDistribution: routeDistribution
         });
     } catch (error) {
