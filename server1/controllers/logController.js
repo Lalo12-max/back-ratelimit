@@ -61,5 +61,5 @@ const getRateDistribution = async (req, res) => {
 module.exports = {
     getLogStats,
     getAllLogs,
-    getRateDistribution  // Asegúrate de exportar la nueva función
+    getRateDistribution  
 };
