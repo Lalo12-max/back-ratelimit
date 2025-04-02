@@ -23,10 +23,14 @@ io.on('connection', (socket) => {
 
 app.use(express.json());
 app.use(cors({
-  origin: ['http://localhost:5173'],  
+
+  origin: ['http://localhost:5173', 'https://frontend-seguridad.onrender.com'],
+  
   methods: ['GET', 'POST'],
+  
   credentials: true
-}));
+  
+  }));
 
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000,
