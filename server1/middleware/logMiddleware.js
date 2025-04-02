@@ -24,7 +24,7 @@ const getClientIp = (req) => {
 const logMiddleware = async (req, res, next) => {
     const start = Date.now();
 
-    // Extraer el token del header
+   
     const authHeader = req.headers['authorization'];
     let userId = null;
 
@@ -38,7 +38,7 @@ const logMiddleware = async (req, res, next) => {
         }
     }
 
-    // Capturar la respuesta
+  
     const oldSend = res.send;
     res.send = async function (data) {
         const result = oldSend.call(this, data);
