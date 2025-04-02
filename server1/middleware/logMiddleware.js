@@ -70,29 +70,54 @@ const logMiddleware = async (req, res, next) => {
 
         try {
             console.log('Intentando insertar log en la base de datos...');
-            const result = await db.query(`
-                INSERT INTO rate_limit_logs 
-                (user_id, method, path, status_code, response_time,
-                ip_address, user_agent, request_body, query_params,
-                hostname, protocol, environment, node_version, process_id)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
-                RETURNING *
-            `, [
-                logData.user_id,
-                logData.method,
-                logData.path,
-                logData.status_code,
-                logData.response_time,
-                logData.ip_address,
-                logData.user_agent,
-                logData.request_body,
-                logData.query_params,
-                logData.hostname,
-                logData.protocol,
-                logData.environment,
-                logData.node_version,
-                logData.process_id
-            ]);
+            try {
+                console.log('=== INICIO DE REGISTRO DE LOG ===');
+                console.log('Datos a insertar:', {
+                    user_id: logData.user_id,
+                    method: logData.method,
+                    path: logData.path,
+                    status_code: logData.status_code,
+                    response_time: logData.response_time,
+                    ip_address: logData.ip_address
+                });
+                console.log('Query params:', logData.query_params);
+                console.log('Request body:', logData.request_body);
+
+                const result = await db.query(`
+                    INSERT INTO rate_limit_logs 
+                    (user_id, method, path, status_code, response_time,
+                    ip_address, user_agent, request_body, query_params,
+                    hostname, protocol, environment, node_version, process_id)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                    RETURNING *
+                `, [
+                    logData.user_id,
+                    logData.method,
+                    logData.path,
+                    logData.status_code,
+                    logData.response_time,
+                    logData.ip_address,
+                    logData.user_agent,
+                    logData.request_body,
+                    logData.query_params,
+                    logData.hostname,
+                    logData.protocol,
+                    logData.environment,
+                    logData.node_version,
+                    logData.process_id
+                ]);
+                
+                console.log('=== RESULTADO DE LA INSERCIÓN ===');
+                console.log('Row insertada:', result.rows[0]);
+                console.log('=== FIN DE REGISTRO DE LOG ===');
+            } catch (error) {
+                console.error('=== ERROR EN REGISTRO DE LOG ===');
+                console.error('Error completo:', error);
+                console.error('Mensaje de error:', error.message);
+                console.error('Stack trace:', error.stack);
+                console.error('Datos que se intentaron insertar:', logData);
+                console.error('=== FIN DE ERROR ===');
+            }
             console.log('Log guardado exitosamente:', result.rows[0]);
         } catch (error) {
             console.error('Error detallado al guardar log:', {
