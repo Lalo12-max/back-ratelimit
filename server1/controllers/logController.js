@@ -41,7 +41,25 @@ const getAllLogs = async (req, res) => {
     }
 };
 
+const getRateDistribution = async (req, res) => {
+    try {
+        const { rows: results } = await db.query(`
+            SELECT 
+                path,
+                COUNT(*) as count
+            FROM rate_limit_logs 
+            GROUP BY path
+            ORDER BY count DESC
+        `);
+        res.json(results);
+    } catch (error) {
+        console.error('Error al obtener distribución de rutas:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+};
+
 module.exports = {
     getLogStats,
-    getAllLogs
+    getAllLogs,
+    getRateDistribution  // Asegúrate de exportar la nueva función
 };
