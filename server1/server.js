@@ -48,6 +48,8 @@ app.post('/verify-mfa', authController.verifyMFA);
 // Cambiar las rutas para incluir el prefijo 'rate'
 app.get('/rate/logs/stats', logController.getLogStats);
 app.get('/rate/logs/all', logController.getAllLogs);
+// Agregar esta nueva ruta junto a las otras rutas de logs
+app.get('/rate/logs/distribution', logController.getRateDistribution);
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
