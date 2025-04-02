@@ -2,7 +2,6 @@ const db = require('../config/database');
 
 const getLogStats = async (req, res) => {
     try {
-        // Estadísticas generales
         const { rows: results } = await db.query(`
             SELECT 
                 method,
@@ -14,45 +13,7 @@ const getLogStats = async (req, res) => {
             GROUP BY method, path, status_code, DATE_TRUNC('day', timestamp)
             ORDER BY date DESC, status_code
         `);
-
-        // Estadísticas por código de estado
-        const { rows: statusStats } = await db.query(`
-            SELECT 
-                status_code,
-                COUNT(*) as count
-            FROM rate_limit_logs
-            GROUP BY status_code
-            ORDER BY status_code
-        `);
-
-        // Estadísticas por método HTTP
-        const { rows: methodStats } = await db.query(`
-            SELECT 
-                method,
-                COUNT(*) as count
-            FROM rate_limit_logs
-            GROUP BY method
-            ORDER BY count DESC
-        `);
-
-        // Distribución por ruta específica para rate limit
-        const { rows: routeDistribution } = await db.query(`
-            SELECT 
-                path,
-                COUNT(*) as total_requests,
-                COUNT(CASE WHEN status_code = 429 THEN 1 END) as rate_limited,
-                COUNT(CASE WHEN status_code != 429 THEN 1 END) as successful
-            FROM rate_limit_logs
-            GROUP BY path
-            ORDER BY total_requests DESC
-        `);
-
-        res.json({
-            general: results,
-            statusStats: statusStats,
-            methodStats: methodStats,
-            routeDistribution: routeDistribution
-        });
+        res.json(results);
     } catch (error) {
         console.error('Error al obtener estadísticas:', error);
         res.status(500).json({ error: 'Error interno del servidor' });
