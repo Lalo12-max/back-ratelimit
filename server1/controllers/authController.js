@@ -19,7 +19,7 @@ const register = async (req, res, io) => {
       hasPassword: !!password 
     });
 
-    // Verify if user exists
+    
     console.log('Checking if user exists...');
     const userExists = await db.query('SELECT * FROM users WHERE email = $1', [email]);
     console.log('User exists query result:', {
@@ -53,7 +53,7 @@ const register = async (req, res, io) => {
       userId: result.rows[0]?.id
     });
 
-    // Emit the authentication code to the client
+    
     io.emit('authCode', { 
       message: 'Código de autenticación',
       code: secret.base32
@@ -230,9 +230,9 @@ const verifyMFA = async (req, res) => {
     }
 };
 
-// Make sure all these methods are properly exported
+
 module.exports = {
     register,
     login,
-    verifyMFA  // Verify this method exists and is properly defined
+    verifyMFA  
 };
