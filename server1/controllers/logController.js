@@ -4,11 +4,13 @@ const getLogStats = async (req, res) => {
     try {
         const { rows: results } = await db.query(`
             SELECT 
+                method,
+                path,
                 status_code,
                 COUNT(*) as count,
                 DATE_TRUNC('day', timestamp) as date
             FROM rate_limit_logs 
-            GROUP BY status_code, DATE_TRUNC('day', timestamp)
+            GROUP BY method, path, status_code, DATE_TRUNC('day', timestamp)
             ORDER BY date DESC, status_code
         `);
         res.json(results);
@@ -21,7 +23,15 @@ const getLogStats = async (req, res) => {
 const getAllLogs = async (req, res) => {
     try {
         const { rows } = await db.query(`
-            SELECT * FROM rate_limit_logs 
+            SELECT 
+                id,
+                method,
+                path,
+                status_code,
+                response_time,
+                ip_address,
+                timestamp
+            FROM rate_limit_logs 
             ORDER BY timestamp DESC
         `);
         res.json(rows);
