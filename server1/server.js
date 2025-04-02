@@ -41,8 +41,9 @@ app.post('/register', (req, res) => {
 });
 app.post('/login', authController.login);
 app.post('/verify-mfa', authController.verifyMFA);
-app.get('/logs/stats', logController.getLogStats);
-app.get('/logs/all', logController.getAllLogs);
+// Cambiar las rutas para incluir el prefijo 'rate'
+app.get('/rate/logs/stats', logController.getLogStats);
+app.get('/rate/logs/all', logController.getAllLogs);
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
